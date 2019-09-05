@@ -8,9 +8,6 @@ Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
 BuildArch: noarch
 Requires: python-six
-%if 0%{?rhel} < 7
-Requires: python-argparse
-%endif
 
 
 %description
