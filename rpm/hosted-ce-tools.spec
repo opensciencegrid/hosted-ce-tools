@@ -29,6 +29,7 @@ rm -rf %{buildroot}%{python2_sitelib}/*.egg-info
 
 %files
 %{_bindir}/update-remote-wn-client
+%{_bindir}/update-all-remote-wn-clients
 
 
 %changelog
