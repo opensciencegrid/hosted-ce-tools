@@ -1,8 +1,8 @@
 %global debug_package %{nil}
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
-Version: 0.1
-Release: 3%{?dist}
+Version: 0.2
+Release: 1%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
@@ -45,6 +45,9 @@ make install DESTDIR=%{buildroot}
 
 
 %changelog
+* Tue Sep 10 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.2-1
+- Fixes
+
 * Tue Sep 10 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.1-3
 - Add systemd timer and service
 
