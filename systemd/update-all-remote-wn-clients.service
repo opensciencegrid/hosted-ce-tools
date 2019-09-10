@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/scripts/update-all-remote-wn-clients
+ExecStart=/usr/bin/update-all-remote-wn-clients
 
 [Install]
 WantedBy=multi-user.target
