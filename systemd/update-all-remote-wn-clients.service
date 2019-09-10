@@ -1,0 +1,12 @@
+[Unit]
+Description=Update WN client installations on remote hosts
+After=syslog.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/scripts/update-all-remote-wn-clients
+
+[Install]
+WantedBy=multi-user.target
+
