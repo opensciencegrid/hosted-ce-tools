@@ -1,13 +1,14 @@
 %global debug_package %{nil}
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
-Version: 0.2
+Version: 0.3
 Release: 1%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
 BuildArch: noarch
 Requires: python-six
+Requires: fetch-crl
 %systemd_requires
 
 
@@ -45,6 +46,9 @@ make install DESTDIR=%{buildroot}
 
 
 %changelog
+* Wed Sep 11 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.3-1
+- Use system fetch-crl
+
 * Tue Sep 10 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.2-1
 - Fixes
 
