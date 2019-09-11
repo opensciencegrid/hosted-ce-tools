@@ -24,7 +24,7 @@ update-all-remote-wn-clients
 ----------------------------
 
 This service periodically runs `update-remote-wn-client` for a list of endpoints.
-The endpoints are specified as sections in `/etc/hosted-ces.ini`.
+The endpoints are specified as sections in `/etc/endpoints.ini`.
 An example endpoint is provided in the default config file.
 
 This can be run as a script or as a systemd service.
@@ -34,7 +34,7 @@ To run it as a service:
 # systemctl enable --now update-all-remote-wn-clients
 ```
 
-Logs will be in `/var/log/updatewn`.
+Logs will be in `/var/log/update-remote-wn-client`.
 Each endpoint will have its own logfile.
 
 

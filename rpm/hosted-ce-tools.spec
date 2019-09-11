@@ -31,10 +31,10 @@ make install DESTDIR=%{buildroot}
 %files
 %{_bindir}/update-remote-wn-client
 %{_bindir}/update-all-remote-wn-clients
-%config(noreplace) %{_sysconfdir}/hosted-ces.ini
+%config(noreplace) %{_sysconfdir}/endpoints.ini
 %{_unitdir}/update-all-remote-wn-clients.service
 %{_unitdir}/update-all-remote-wn-clients.timer
-%dir /var/log/updatewn
+%dir /var/log/update-remote-wn-client
 
 
 %post
@@ -48,6 +48,7 @@ make install DESTDIR=%{buildroot}
 %changelog
 * Wed Sep 11 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.3-1
 - Use system fetch-crl
+- Change config file name and log directory name
 
 * Tue Sep 10 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.2-1
 - Fixes

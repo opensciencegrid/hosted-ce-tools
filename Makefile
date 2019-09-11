@@ -8,12 +8,12 @@ _default:
 
 install: install-noconfig
 	mkdir -p $(DESTDIR)/etc
-	install -p -m 644 config/hosted-ces.ini $(DESTDIR)/etc/
+	install -p -m 644 config/endpoints.ini $(DESTDIR)/etc/
 
 install-noconfig:
 	mkdir -p $(DESTDIR)/usr/bin
 	install -p -m 755 scripts/* $(DESTDIR)/usr/bin/
-	mkdir -p $(DESTDIR)/var/log/updatewn
+	mkdir -p $(DESTDIR)/var/log/update-remote-wn-client
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system
 	install -p -m 644 systemd/update-all-remote-wn-clients.*  $(DESTDIR)/usr/lib/systemd/system/
 
