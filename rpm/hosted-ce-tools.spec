@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
-Version: 0.4
+Version: 0.5
 Release: 1%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
@@ -46,6 +46,9 @@ make install DESTDIR=%{buildroot}
 
 
 %changelog
+* Wed Nov 13 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.5-1
+- Don't run updaters in parallel (PR #1)
+
 * Tue Sep 17 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.4-1
 - Add --dry-run option to update-all-remote-wn-clients script
 - Allow more characters in endpoint names in endpoints.ini
