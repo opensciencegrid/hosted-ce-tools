@@ -2,13 +2,14 @@
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
 Version: 0.5
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
 BuildArch: noarch
 Requires: python-six
 Requires: fetch-crl
+Requires: sudo
 %systemd_requires
 
 
@@ -39,6 +40,7 @@ make install DESTDIR=%{buildroot}
 
 %post
 %systemd_post update-all-remote-wn-clients.service update-all-remote-wn-clients.timer
+systemctl daemon-reload
 
 
 %preun
@@ -46,6 +48,9 @@ make install DESTDIR=%{buildroot}
 
 
 %changelog
+* Fri Dec 20 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.5-2
+- Require sudo (SOFTWARE-3954)
+
 * Wed Nov 13 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.5-1
 - Don't run updaters in parallel (PR #1)
 
