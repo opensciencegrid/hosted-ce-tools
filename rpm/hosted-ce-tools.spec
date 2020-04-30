@@ -1,8 +1,8 @@
 %global debug_package %{nil}
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
-Version: 0.5
-Release: 2%{?dist}
+Version: 0.6
+Release: 1%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
@@ -48,6 +48,10 @@ systemctl daemon-reload
 
 
 %changelog
+* Thu Apr 30 2020 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.6-1
+- Have update-all-remote-wn-ce run updaters with a timeout (SOFTWARE-4081)
+- If one update fails, keep going with the other updates instead of bailing out
+
 * Fri Dec 20 2019 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.5-2
 - Require sudo (SOFTWARE-3954)
 
