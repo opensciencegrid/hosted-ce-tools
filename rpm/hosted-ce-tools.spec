@@ -10,6 +10,7 @@ BuildArch: noarch
 Requires: python-six
 Requires: fetch-crl
 Requires: sudo
+Requires: wget
 %if 0%{?rhel} < 8
 Requires: git
 %else
