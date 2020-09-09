@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
-Version: 0.7
+Version: 0.8
 Release: 1%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
@@ -50,6 +50,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Wed Sep 09 2020 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.8-1
+- Download osg-ca-manage from GitHub instead of using a tarball client for fetching CAs (SOFTWARE-4242)
+
 * Tue May 05 2020 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.7-1
 - Fix bug in timeout where sudo would prompt the user for a password (SOFTWARE-4081)
 
