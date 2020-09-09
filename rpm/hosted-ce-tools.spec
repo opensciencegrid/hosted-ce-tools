@@ -2,12 +2,16 @@
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
 Version: 0.8
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
 BuildArch: noarch
+%if 0%{?rhel} >= 8
+Requires: python2-six
+%else
 Requires: python-six
+%endif
 Requires: fetch-crl
 Requires: sudo
 Requires: wget
@@ -50,6 +54,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Wed Sep 09 2020 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.8-2
+- Fix python-six dependency for EL8
+
 * Wed Sep 09 2020 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.8-1
 - Download osg-ca-manage from GitHub instead of using a tarball client for fetching CAs (SOFTWARE-4242)
 
