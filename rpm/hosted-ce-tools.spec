@@ -10,6 +10,8 @@ BuildArch: noarch
 Requires: python-six
 Requires: fetch-crl
 Requires: sudo
+Requires: wget
+Requires: /usr/bin/git
 %systemd_requires
 
 
