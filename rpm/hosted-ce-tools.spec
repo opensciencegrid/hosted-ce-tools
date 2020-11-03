@@ -1,8 +1,8 @@
 %global debug_package %{nil}
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
-Version: 0.8
-Release: 2%{?dist}
+Version: 0.9
+Release: 1%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
@@ -54,6 +54,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Tue Nov 03 2020 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.9-1
+- Fix reversed test
+
 * Wed Sep 09 2020 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.8-2
 - Fix python-six dependency for EL8
 
