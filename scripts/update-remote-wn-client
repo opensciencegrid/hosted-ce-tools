@@ -165,6 +165,7 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
             # If remote dir is missing then just upload and return
             subprocess.check_call(["rsync", "-e", " ".join(ssh),
                                    "-qaz",
+                                   "--inplace",
                                    local_dir,
                                    "%s:%s" % (remote_host, remote_dir)])
             return
@@ -175,6 +176,7 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
                                "-qaz",
                                "--link-dest", remote_dir,
                                "--delete-before",
+                               "--inplace",
                                local_dir,
                                "%s:%s" % (remote_host, newdir)])
     except (OSError, CalledProcessError) as e:
