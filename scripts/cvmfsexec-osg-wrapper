@@ -1,0 +1,147 @@
+#!/bin/bash
+#
+# cvmfsexec-osg-wrapper
+#
+# Runs the specified command with CVMFS repos mounted (using mountrepo)
+# in a temp directory; the directory will be in the command's environment
+# as $CVMFS_BASE.
+#
+# Clones the cvmfsexec repo from GitHub in order to create the environment;
+# checks out the latest tagged version.
+# Normally bails on an error; pass `-safe` as the first argument in order
+# to run the command anyway (without CVMFS).
+#
+# To use this in jobs, edit blah.config and set
+#
+#       blah_job_wrapper=/path/to/cvmfsexec-osg-wrapper
+#
+# or
+#
+#       blah_job_wrapper=/path/to/cvmfsexec-osg-wrapper -safe
+#
+
+# TODO: Allow overriding/adding to CVMFS_REPOS
+CVMFS_REPOS=(config-osg.opensciencegrid.org oasis.opensciencegrid.org gwosc.osgstorage.org)
+CVMFS_HTTP_PROXY=${CVMFS_HTTP_PROXY-}
+
+if [[ -z $CVMFS_HTTP_PROXY ]]; then
+    if [[ $TACC_SYSTEM = stampede2 ]]; then
+        CVMFS_HTTP_PROXY=http://login5.stampede2.tacc.utexas.edu:3128/
+    fi
+fi
+
+
+SAFE=false
+if [[ $1 = -safe ]]; then
+    SAFE=true
+    shift
+fi
+
+job=("$@")
+
+fail () {
+    echo "$@" >&2
+    if $SAFE; then
+        # so it shows up in environment dumps in the job
+        export CVMFSEXEC_WRAPPER_FAILURE="$*"
+        echo "*** $0 failed; cvmfs will be unavailable ***" >&2
+        "${job[@]}"
+        exit $?
+    else
+        exit 1
+    fi
+}
+
+
+add_or_replace () {
+    local file="$1"
+    local var="$2"
+    local value="$3"
+
+    if [[ -e $file ]] && grep -Eq "^${var}=" "$file"; then
+        sed -i -r -e "s^${var}=.*${var}=\"${value}\"" "$file"
+    else
+        echo "${var}=\"${value}\"" >> "$file"
+    fi
+}
+
+
+#
+# Begin
+#
+
+command -v fusermount >& /dev/null || fail "Required command 'fusermount' not found"
+
+set -o nounset
+PS4='+ ${LINENO}: '
+#set -x
+
+prevdir=$(pwd)
+if [[ -n ${CVMFSEXEC_WRAPPER_WORKDIR:-} ]]; then
+    workdir=$CVMFSEXEC_WRAPPER_WORKDIR
+    mkdir -p "$workdir"
+    chmod 0700 "$workdir"
+    rm -rf "$workdir"/cvmfsexec >& /dev/null || :
+else
+    workdir=$(mktemp -d "${OSG_WN_TMP:-${TMPDIR:-/tmp}}/$USER-cvmfsexec-XXXXXX")
+fi
+trap 'cd "$prevdir"; rm -rf "$workdir"' EXIT
+cd "$workdir" || fail "Couldn't enter work dir $workdir"
+
+# Obtain cvmfsexec and the OSG CVMFS distribution
+git clone https://github.com/cvmfs/cvmfsexec || fail "Error downloading cvmfsexec from GitHub"
+cd cvmfsexec
+# Check out latest tagged version. Only git 2.0+ has "git tag --sort"
+version_tags=$(git tag --list 'v*' | sort -V)
+tag=$(tail -n 1 <<<"$version_tags")
+[[ -n $tag ]] || fail "Couldn't get latest tagged version"
+git checkout "$tag" || fail "Couldn't switch to $tag"
+./makedist osg || fail "Couldn't get osg cvmfs distribution"
+
+# Add local configuration if any
+cvmfs_local_config=$workdir/cvmfsexec/dist/etc/cvmfs/default.local
+if [[ -e $workdir/cvmfsexec/default.local ]]; then
+    cp -f "$workdir/cvmfsexec/default.local"  "$cvmfs_local_config"
+fi
+
+if [[ -n $CVMFS_HTTP_PROXY ]]; then
+    echo >&2 "Setting CVMFS_HTTP_PROXY to ${CVMFS_HTTP_PROXY}"
+    add_or_replace "$cvmfs_local_config" CVMFS_HTTP_PROXY "${CVMFS_HTTP_PROXY}"
+fi
+
+"$workdir"/cvmfsexec/umountrepo -a || :
+
+trap '"$workdir"/cvmfsexec/umountrepo -a; cd "$prevdir"; rm -rf "$workdir"' EXIT
+
+# Mount repos
+for repo in "${CVMFS_REPOS[@]}"; do
+    "$workdir"/cvmfsexec/mountrepo "$repo" || fail "Unable to mount cvmfs repo $repo"
+done
+
+export CVMFS_BASE="$workdir"/cvmfsexec/dist/cvmfs
+
+#export SINGULARITYENV_X509_CERT_DIR=$CVMFS_BASE/oasis.opensciencegrid.org/mis/certificates/
+#
+## disable jemalloc virtual memory reuse
+#export SINGULARITYENV_MALLOC_CONF="retain:false"
+#
+#export SINGULARITYENV_LD_PRELOAD=""
+#export SINGULARITY_BIND="/tmp,/scratch"
+#export SINGULARITYENV_MALLOC_CONF="retain:false"
+
+export GLIDEIN_SINGULARITY_BINDPATH="$CVMFS_BASE:/cvmfs"
+
+# If we have to use this script to mount CVMFS, we can't use images from there anyway.
+export ALLOW_NONCVMFS_IMAGES=true
+
+echo "*** cvmfs available at $CVMFS_BASE" >&2
+
+if [[ -n $TACC_SYSTEM ]]; then
+    echo >&2 "*** Adding $TACC_SYSTEM statements"
+    set +o nounset
+    module load tacc-singularity
+fi
+
+
+# Note: do not use 'exec'; cleanup won't run
+"$@"
