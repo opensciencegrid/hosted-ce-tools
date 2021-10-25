@@ -120,15 +120,6 @@ done
 
 export CVMFS_BASE="$workdir"/cvmfsexec/dist/cvmfs
 
-#export SINGULARITYENV_X509_CERT_DIR=$CVMFS_BASE/oasis.opensciencegrid.org/mis/certificates/
-#
-## disable jemalloc virtual memory reuse
-#export SINGULARITYENV_MALLOC_CONF="retain:false"
-#
-#export SINGULARITYENV_LD_PRELOAD=""
-#export SINGULARITY_BIND="/tmp,/scratch"
-#export SINGULARITYENV_MALLOC_CONF="retain:false"
-
 export GLIDEIN_SINGULARITY_BINDPATH="$CVMFS_BASE:/cvmfs"
 
 # If we have to use this script to mount CVMFS, we can't use images from there anyway.
