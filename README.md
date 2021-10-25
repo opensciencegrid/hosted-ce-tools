@@ -44,7 +44,7 @@ cvmfsexec-osg-wrapper
 Uses CVMFSEXEC to mount some CVMFS repos and runs the executable given on the
 command line.  Meant to be run on the exec node as a job wrapper around
 the pilot itself; copy it to a location accessible from the pilot job and set
-it as `blah_job_wrapper` in `blah.config`, such as
+it as `blah_job_wrapper` in `etc/blah.config`, such as
 
     blah_job_wrapper="$HOME/cvmfsexec-osg-wrapper -safe"
 
