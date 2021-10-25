@@ -1,0 +1,99 @@
+#!/bin/bash
+#
+# Create a tarball with a cvmfsexec distribution with the OSG config.
+#
+# By default this uses the latest tagged version of cvmfsexec and creates the
+# tarball as "cvmfsexec-osg.tar.gz".  See --help for how to override that.
+#
+
+DEFAULT_FILENAME=cvmfsexec-osg.tar.gz
+
+
+prog=${0##*/}
+
+fail () {
+    echo "$prog:" "$@" >&2
+    exit 1
+}
+
+usage () {
+    cat >&2 <<END
+Usage: $prog [<options>] [<destfile>]"
+
+Makes a tarball with a cvmfsexec distribution with the OSG config.
+
+    <destfile> is the path to the tarball file to create (default $DEFAULT_FILENAME)
+
+    -d|--distro [el7|el8]   the distribution (otherwise will use the current machine's distribution)
+    -b|--branch|--tag <git branch or tag>
+                            the git branch/tag of the cvmfsexec repo to check out
+                            if not specified, will use the newest tagged version
+
+END
+}
+
+destfile=$DEFAULT_FILENAME
+m=
+tag=
+while [[ $1 ]]; do
+    case $1 in
+        -h|--help) usage; exit 0 ;;
+        -d|--distro)
+            if [[ $2 ]]; then
+                m="-m $2-x86_64"
+                shift 2
+            else
+                echo >&2 "$1 requires an argument"
+                usage
+                exit 2
+            fi
+            ;;
+        -b|--branch|--tag)
+            if [[ $2 ]]; then
+                tag=$2
+                shift 2
+            else
+                echo >&2 "$1 requires an argument"
+                usage
+                exit 2
+            fi
+            ;;
+        -*) echo >&2 "unknown option $1"; usage; exit 2 ;;
+        *) destfile=$1; shift ;;
+    esac
+done
+
+
+set -o nounset
+set -e
+PS4='+ ${LINENO}: '
+set -x
+
+workdir=$(mktemp -d -t "$prog-XXXXXX")
+trap 'rm -rf "$workdir"' ERR EXIT
+pushd "$workdir"
+
+git clone https://github.com/cvmfs/cvmfsexec || fail "Error downloading cvmfsexec from GitHub"
+cd cvmfsexec
+
+if [[ -z $tag ]]; then
+    # Branch/tag not specified.  Check out latest tagged version.
+    version_tags=$(git tag --list 'v*' | sort -V)
+    # ^^ can't use "git tag --sort", it requires git 2.0+
+    tag=$(tail -n 1 <<<"$version_tags")
+    [[ -n $tag ]] || fail "Couldn't get latest tagged version"
+fi
+
+git checkout "$tag" || fail "Couldn't switch to $tag"
+./makedist $m osg || fail "Couldn't get osg distribution"
+cd ..
+tar -czf cvmfsexec.tar.gz cvmfsexec/
+rm -rf cvmfsexec/ || :
+
+popd
+mv "$workdir/cvmfsexec.tar.gz" "$destfile"
+
+echo
+echo "cvmfsexec $tag tarball created at $destfile"
+
+# vim:et:sw=4:sts=4:ts=8
