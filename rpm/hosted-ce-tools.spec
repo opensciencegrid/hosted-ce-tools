@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
-Version: 0.9
+Version: 0.10
 Release: 1%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
@@ -36,6 +36,8 @@ make install DESTDIR=%{buildroot}
 
 
 %files
+%{_bindir}/cvmfsexec-osg-wrapper
+%{_bindir}/make-cvmfsexec-tarball
 %{_bindir}/update-remote-wn-client
 %{_bindir}/update-all-remote-wn-clients
 %config(noreplace) %{_sysconfdir}/endpoints.ini
@@ -54,6 +56,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Mon Oct 25 2021 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.10-1
+- Add cvmfsexec-osg-wrapper and make-cvmfsexec-tarball
+
 * Tue Nov 03 2020 Mátyás Selmeci <matyas@cs.wisc.edu> - 0.9-1
 - Fix reversed test
 
