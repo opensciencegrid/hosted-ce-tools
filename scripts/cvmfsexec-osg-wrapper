@@ -25,7 +25,7 @@ CVMFS_REPOS=(config-osg.opensciencegrid.org oasis.opensciencegrid.org gwosc.osgs
 CVMFS_HTTP_PROXY=${CVMFS_HTTP_PROXY-}
 
 if [[ -z $CVMFS_HTTP_PROXY ]]; then
-    if [[ $TACC_SYSTEM = stampede2 ]]; then
+    if [[ ${TACC_SYSTEM-} = stampede2 ]]; then
         CVMFS_HTTP_PROXY=http://login5.stampede2.tacc.utexas.edu:3128/
     fi
 fi
@@ -127,7 +127,7 @@ export ALLOW_NONCVMFS_IMAGES=true
 
 echo "*** cvmfs available at $CVMFS_BASE" >&2
 
-if [[ -n $TACC_SYSTEM ]]; then
+if [[ -n ${TACC_SYSTEM-} ]]; then
     echo >&2 "*** Adding $TACC_SYSTEM statements"
     set +o nounset
     module load tacc-singularity
