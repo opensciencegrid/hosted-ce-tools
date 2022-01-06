@@ -19,10 +19,15 @@
 #
 #       blah_job_wrapper=/path/to/cvmfsexec-osg-wrapper -safe
 #
+# Then set CVMFSEXEC_REPOS in the environment to a comma-or-space-separated
+# list of CVMFS repos to mount.
 
-# TODO: Allow overriding/adding to CVMFS_REPOS
-CVMFS_REPOS=(config-osg.opensciencegrid.org oasis.opensciencegrid.org gwosc.osgstorage.org)
+CVMFSEXEC_REPOS=$(tr -s ',' ' ' <<<"${CVMFSEXEC_REPOS-}")
 CVMFS_HTTP_PROXY=${CVMFS_HTTP_PROXY-}
+
+if [[ -z $CVMFSEXEC_REPOS ]]; then
+    exec "$@"
+fi
 
 if [[ -z $CVMFS_HTTP_PROXY ]]; then
     if [[ ${TACC_SYSTEM-} = stampede2 ]]; then
@@ -114,7 +119,7 @@ fi
 trap '"$workdir"/cvmfsexec/umountrepo -a; cd "$prevdir"; rm -rf "$workdir"' EXIT
 
 # Mount repos
-for repo in "${CVMFS_REPOS[@]}"; do
+for repo in config-osg.opensciencegrid.org $CVMFSEXEC_REPOS; do
     "$workdir"/cvmfsexec/mountrepo "$repo" || fail "Unable to mount cvmfs repo $repo"
 done
 
