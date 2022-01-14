@@ -2,9 +2,9 @@
 #
 # cvmfsexec-osg-wrapper
 #
-# Runs the specified command with CVMFS repos mounted (using mountrepo)
-# in a temp directory; the directory will be in the command's environment
-# as $CVMFS_BASE.
+# Runs the specified command with CVMFS repos mounted (using cvmfsexec if
+# possible, otherwise mountrepo) in a temp directory; the directory will be
+# in the command's environment as $CVMFS_BASE.
 #
 # Clones the cvmfsexec repo from GitHub in order to create the environment;
 # checks out the latest tagged version.
@@ -30,6 +30,7 @@ if [[ -z $CVMFSEXEC_REPOS ]]; then
 fi
 
 if [[ -z $CVMFS_HTTP_PROXY ]]; then
+    # TODO: This site-specific thing does not belong in this script.
     if [[ ${TACC_SYSTEM-} = stampede2 ]]; then
         CVMFS_HTTP_PROXY=http://login5.stampede2.tacc.utexas.edu:3128/
     fi
@@ -75,8 +76,6 @@ add_or_replace () {
 # Begin
 #
 
-command -v fusermount >& /dev/null || fail "Required command 'fusermount' not found"
-
 set -o nounset
 PS4='+ ${LINENO}: '
 #set -x
@@ -114,30 +113,43 @@ if [[ -n $CVMFS_HTTP_PROXY ]]; then
     add_or_replace "$cvmfs_local_config" CVMFS_HTTP_PROXY "${CVMFS_HTTP_PROXY}"
 fi
 
-"$workdir"/cvmfsexec/umountrepo -a || :
-
-trap '"$workdir"/cvmfsexec/umountrepo -a; cd "$prevdir"; rm -rf "$workdir"' EXIT
-
-# Mount repos
-for repo in config-osg.opensciencegrid.org $CVMFSEXEC_REPOS; do
-    "$workdir"/cvmfsexec/mountrepo "$repo" || fail "Unable to mount cvmfs repo $repo"
-done
-
-export CVMFS_BASE="$workdir"/cvmfsexec/dist/cvmfs
-
-export GLIDEIN_SINGULARITY_BINDPATH="$CVMFS_BASE:/cvmfs"
-
 # If we have to use this script to mount CVMFS, we can't use images from there anyway.
 export ALLOW_NONCVMFS_IMAGES=true
 
-echo "*** cvmfs available at $CVMFS_BASE" >&2
-
+# TODO: This site-specific thing does not belong in this script.
 if [[ -n ${TACC_SYSTEM-} ]]; then
     echo >&2 "*** Adding $TACC_SYSTEM statements"
     set +o nounset
     module load tacc-singularity
+    set -o nounset
 fi
 
+echo >&2 "*** Running cvmfsexec smoke test:"
+if "$workdir"/cvmfsexec/cvmfsexec -N -- /bin/true; then
+    echo >&2 "*** cvmfsexec smoke test passed: you have the permissions to run cvmfsexec directly"
 
-# Note: do not use 'exec'; cleanup won't run
-"$@"
+    # Note: do not use 'exec'; cleanup won't run
+    export CVMFS_BASE=/cvmfs
+    export GLIDEIN_SINGULARITY_BINDPATH="$CVMFS_BASE:/cvmfs"
+    echo "*** cvmfs available at $CVMFS_BASE" >&2
+    "$workdir"/cvmfsexec/cvmfsexec -N $CVMFSEXEC_REPOS -- "$@"
+else
+    echo >&2 "*** cvmfsexec smoke test failed: will use mountrepo instead"
+    command -v fusermount >& /dev/null || fail "Required command 'fusermount' not found"
+
+    "$workdir"/cvmfsexec/umountrepo -a || :
+
+    trap '"$workdir"/cvmfsexec/umountrepo -a; cd "$prevdir"; rm -rf "$workdir"' EXIT
+
+    # Mount repos
+    for repo in config-osg.opensciencegrid.org $CVMFSEXEC_REPOS; do
+        "$workdir"/cvmfsexec/mountrepo "$repo" || fail "Unable to mount cvmfs repo $repo"
+    done
+
+    export CVMFS_BASE="$workdir"/cvmfsexec/dist/cvmfs
+    export GLIDEIN_SINGULARITY_BINDPATH="$CVMFS_BASE:/cvmfs"
+    echo "*** cvmfs available at $CVMFS_BASE" >&2
+
+    # Note: do not use 'exec'; cleanup won't run
+    "$@"
+fi
