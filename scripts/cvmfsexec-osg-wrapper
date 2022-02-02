@@ -29,14 +29,6 @@ if [[ -z $CVMFSEXEC_REPOS ]]; then
     exec "$@"
 fi
 
-if [[ -z $CVMFS_HTTP_PROXY ]]; then
-    # TODO: This site-specific thing does not belong in this script.
-    if [[ ${TACC_SYSTEM-} = stampede2 ]]; then
-        CVMFS_HTTP_PROXY=http://login5.stampede2.tacc.utexas.edu:3128/
-    fi
-fi
-
-
 SAFE=false
 if [[ $1 = -safe ]]; then
     SAFE=true
@@ -115,14 +107,6 @@ fi
 
 # If we have to use this script to mount CVMFS, we can't use images from there anyway.
 export ALLOW_NONCVMFS_IMAGES=true
-
-# TODO: This site-specific thing does not belong in this script.
-if [[ -n ${TACC_SYSTEM-} ]]; then
-    echo >&2 "*** Adding $TACC_SYSTEM statements"
-    set +o nounset
-    module load tacc-singularity
-    set -o nounset
-fi
 
 echo >&2 "*** Running cvmfsexec smoke test:"
 if "$workdir"/cvmfsexec/cvmfsexec -N -- /bin/true; then
