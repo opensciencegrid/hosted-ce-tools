@@ -127,7 +127,11 @@ else
 
     # Mount repos
     for repo in config-osg.opensciencegrid.org $CVMFSEXEC_REPOS; do
-        "$workdir"/cvmfsexec/mountrepo "$repo" || fail "Unable to mount cvmfs repo $repo"
+        if ! "$workdir"/cvmfsexec/mountrepo "$repo"; then
+            echo "$repo mount failed, dumping logs:" >&2
+            tail -n 20 "$workdir"/cvmfsexec/log/"$repo".log >&2
+            fail "Unable to mount cvmfs repo $repo"
+        fi
     done
 
     export CVMFS_BASE="$workdir"/cvmfsexec/dist/cvmfs
