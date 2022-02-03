@@ -112,10 +112,14 @@ echo >&2 "*** Running cvmfsexec smoke test:"
 if "$workdir"/cvmfsexec/cvmfsexec -N -- /bin/true; then
     echo >&2 "*** cvmfsexec smoke test passed: you have the permissions to run cvmfsexec directly"
 
-    # Note: do not use 'exec'; cleanup won't run
+    # cvmfsexec lets us have CVMFS mounted at `/cvmfs`; set $CVMFS_BASE for
+    # consistency with the mountrepo path
+
     export CVMFS_BASE=/cvmfs
     export GLIDEIN_SINGULARITY_BINDPATH="$CVMFS_BASE:/cvmfs"
     echo "*** cvmfs available at $CVMFS_BASE" >&2
+
+    # Note: do not use 'exec'; cleanup won't run
     "$workdir"/cvmfsexec/cvmfsexec -N $CVMFSEXEC_REPOS -- "$@"
 else
     echo >&2 "*** cvmfsexec smoke test failed: will use mountrepo instead"
@@ -133,6 +137,9 @@ else
             fail "Unable to mount cvmfs repo $repo"
         fi
     done
+
+    # mountrepo can't mount CVMFS to `/cvmfs`.  Set $CVMFS_BASE to its
+    # location so scripts know where to find it.
 
     export CVMFS_BASE="$workdir"/cvmfsexec/dist/cvmfs
     export GLIDEIN_SINGULARITY_BINDPATH="$CVMFS_BASE:/cvmfs"
