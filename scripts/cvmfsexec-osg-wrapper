@@ -34,14 +34,14 @@ CVMFSEXEC_REPOS=$(tr -s ',' ' ' <<<"${CVMFSEXEC_REPOS-}")
 CVMFS_HTTP_PROXY=${CVMFS_HTTP_PROXY-}
 UMOUNTREPO_UNMOUNT_ALL=${UMOUNTREPO_UNMOUNT_ALL-}
 
-if [[ -z $CVMFSEXEC_REPOS ]]; then
-    exec "$@"
-fi
-
 SAFE=false
 if [[ $1 = -safe ]]; then
     SAFE=true
     shift
+fi
+
+if [[ -z $CVMFSEXEC_REPOS ]]; then
+    exec "$@"
 fi
 
 job=("$@")
