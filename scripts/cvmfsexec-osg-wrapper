@@ -21,9 +21,18 @@
 #
 # Then set CVMFSEXEC_REPOS in the environment to a comma-or-space-separated
 # list of CVMFS repos to mount.
+#
+# Other variables:
+# - CVMFS_HTTP_PROXY: the proxy to use for CVMFS
+# - UMOUNTREPO_UNMOUNT_ALL:
+#       no effect unless using `mountrepo`; set this to unmount all mounted
+#       repos before and after.  This makes cleanup more reliable but may
+#       conflict if multiple copies of this script are running, so only use
+#       it with whole-machine jobs.
 
 CVMFSEXEC_REPOS=$(tr -s ',' ' ' <<<"${CVMFSEXEC_REPOS-}")
 CVMFS_HTTP_PROXY=${CVMFS_HTTP_PROXY-}
+UMOUNTREPO_UNMOUNT_ALL=${UMOUNTREPO_UNMOUNT_ALL-}
 
 if [[ -z $CVMFSEXEC_REPOS ]]; then
     exec "$@"
@@ -125,9 +134,23 @@ else
     echo >&2 "*** cvmfsexec smoke test failed: will use mountrepo instead"
     command -v fusermount >& /dev/null || fail "Required command 'fusermount' not found"
 
-    "$workdir"/cvmfsexec/umountrepo -a || :
+    if [[ -n $UMOUNTREPO_UNMOUNT_ALL ]]; then
+        "$workdir"/cvmfsexec/umountrepo -a || :
+    fi
 
-    trap '"$workdir"/cvmfsexec/umountrepo -a; cd "$prevdir"; rm -rf "$workdir"' EXIT
+    mounted_repos=
+
+    unmount_repos () {
+        if [[ -n $UMOUNTREPO_UNMOUNT_ALL ]]; then
+            "$workdir"/cvmfsexec/umountrepo -a || :
+        else
+            for repo in $mounted_repos; do
+                "$workdir"/cvmfsexec/umountrepo "$repo" || :
+            done
+        fi
+    }
+
+    trap 'unmount_repos; cd "$prevdir"; rm -rf "$workdir"' EXIT
 
     # Mount repos
     for repo in config-osg.opensciencegrid.org $CVMFSEXEC_REPOS; do
@@ -136,6 +159,7 @@ else
             tail -n 20 "$workdir"/cvmfsexec/log/"$repo".log >&2
             fail "Unable to mount cvmfs repo $repo"
         fi
+        mounted_repos="$mounted_repos $repo"
     done
 
     # mountrepo can't mount CVMFS to `/cvmfs`.  Set $CVMFS_BASE to its
