@@ -135,6 +135,7 @@ else
     command -v fusermount >& /dev/null || fail "Required command 'fusermount' not found"
 
     if [[ -n $UMOUNTREPO_UNMOUNT_ALL ]]; then
+        # Unmount repos from a previous run that couldn't clean up
         "$workdir"/cvmfsexec/umountrepo -a || :
     fi
 
