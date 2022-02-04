@@ -44,6 +44,12 @@ if [[ -z $CVMFSEXEC_REPOS ]]; then
     exec "$@"
 fi
 
+# We use $CVMFSEXEC_REPOS unquoted so check for bad characters
+badchars=$(grep -o '[^0-9a-zA-Z. -]' <<<"$CVMFSEXEC_REPOS")
+if [[ -n $badchars ]]; then
+    fail "Illegal character(s) $badchars in \$CVMFSEXEC_REPOS"
+fi
+
 job=("$@")
 
 fail () {
@@ -129,6 +135,7 @@ if "$workdir"/cvmfsexec/cvmfsexec -N -- /bin/true; then
     echo "*** cvmfs available at $CVMFS_BASE" >&2
 
     # Note: do not use 'exec'; cleanup won't run
+    # $CVMFSEXEC_REPOS is a space-separated list so it's unquoted on purpose.
     "$workdir"/cvmfsexec/cvmfsexec -N $CVMFSEXEC_REPOS -- "$@"
 else
     echo >&2 "*** cvmfsexec smoke test failed: will use mountrepo instead"
@@ -154,6 +161,7 @@ else
     trap 'unmount_repos; cd "$prevdir"; rm -rf "$workdir"' EXIT
 
     # Mount repos
+    # $CVMFSEXEC_REPOS is a space-separated list so it's unquoted on purpose.
     for repo in config-osg.opensciencegrid.org $CVMFSEXEC_REPOS; do
         if ! "$workdir"/cvmfsexec/mountrepo "$repo"; then
             echo "$repo mount failed, dumping logs:" >&2
