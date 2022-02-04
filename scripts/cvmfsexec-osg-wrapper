@@ -44,12 +44,6 @@ if [[ -z $CVMFSEXEC_REPOS ]]; then
     exec "$@"
 fi
 
-# We use $CVMFSEXEC_REPOS unquoted so check for bad characters
-badchars=$(grep -o '[^0-9a-zA-Z. -]' <<<"$CVMFSEXEC_REPOS")
-if [[ -n $badchars ]]; then
-    fail "Illegal character(s) $badchars in \$CVMFSEXEC_REPOS"
-fi
-
 job=("$@")
 
 fail () {
@@ -82,6 +76,12 @@ add_or_replace () {
 #
 # Begin
 #
+
+# We use $CVMFSEXEC_REPOS unquoted so check for bad characters
+badchars=$(grep -o '[^0-9a-zA-Z. -]' <<<"$CVMFSEXEC_REPOS")
+if [[ -n $badchars ]]; then
+    fail "Illegal character(s) $badchars in \$CVMFSEXEC_REPOS"
+fi
 
 set -o nounset
 PS4='+ ${LINENO}: '
