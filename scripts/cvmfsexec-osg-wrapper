@@ -6,8 +6,10 @@
 # possible, otherwise mountrepo) in a temp directory; the directory will be
 # in the command's environment as $CVMFS_BASE.
 #
-# Clones the cvmfsexec repo from GitHub in order to create the environment;
-# checks out the latest tagged version.
+# Uses the tarball in $CVMFSEXEC_TARBALL to get an osg distribution of
+# cvmfsexec; if missing or empty, clones cvmfsexec from GitHub and builds
+# the distribution on the fly.
+#
 # Normally bails on an error; pass `-safe` as the first argument in order
 # to run the command anyway (without CVMFS).
 #
@@ -29,10 +31,12 @@
 #       repos before and after.  This makes cleanup more reliable but may
 #       conflict if multiple copies of this script are running, so only use
 #       it with whole-machine jobs.
+# - CVMFSEXEC_TARBALL: pre-created tarball containing cvmfsexec
 
 CVMFSEXEC_REPOS=$(tr -s ',' ' ' <<<"${CVMFSEXEC_REPOS-}")
 CVMFS_HTTP_PROXY=${CVMFS_HTTP_PROXY-}
 UMOUNTREPO_UNMOUNT_ALL=${UMOUNTREPO_UNMOUNT_ALL-}
+CVMFSEXEC_TARBALL=${CVMFSEXEC_TARBALL-}
 
 SAFE=false
 if [[ $1 = -safe ]]; then
@@ -87,6 +91,17 @@ set -o nounset
 PS4='+ ${LINENO}: '
 #set -x
 
+[[ $(uname -p) == "x86_64" ]] || fail "Only the x86_64 architecture is supported"
+grep -q '^ID_LIKE=.*rhel.*' /etc/os-release || fail "Only rhel-like distributions are supported"
+OS_VERSION_ID=$(grep '^VERSION_ID=' /etc/os-release | tr -d '"' | cut -d= -f2-)
+if [[ $OS_VERSION_ID = 7* ]]; then
+    distro=rhel7-x86_64
+elif [[ $OS_VERSION_ID = 8* ]]; then
+    distro=rhel8-x86_64
+else
+    fail "Unsupported OS version $OS_VERSION_ID"
+fi
+
 prevdir=$(pwd)
 if [[ -n ${CVMFSEXEC_WRAPPER_WORKDIR:-} ]]; then
     workdir=$CVMFSEXEC_WRAPPER_WORKDIR
@@ -100,19 +115,31 @@ trap 'cd "$prevdir"; rm -rf "$workdir"' EXIT
 cd "$workdir" || fail "Couldn't enter work dir $workdir"
 
 # Obtain cvmfsexec and the OSG CVMFS distribution
-git clone https://github.com/cvmfs/cvmfsexec || fail "Error downloading cvmfsexec from GitHub"
-cd cvmfsexec
-# Check out latest tagged version. Only git 2.0+ has "git tag --sort"
-version_tags=$(git tag --list 'v*' | sort -V)
-tag=$(tail -n 1 <<<"$version_tags")
-[[ -n $tag ]] || fail "Couldn't get latest tagged version"
-git checkout "$tag" || fail "Couldn't switch to $tag"
-./makedist osg || fail "Couldn't get osg cvmfs distribution"
+if [[ -f $CVMFSEXEC_TARBALL ]]; then
+    # We are given a tarball: use it
+    tar xzf "$CVMFSEXEC_TARBALL" || fail "Couldn't extract $CVMFSEXEC_TARBALL"
+    if [[ -d ./cvmfsexec/$distro ]]; then
+        cvmfsexec_dir=$workdir/cvmfsexec/$distro
+    else
+        cvmfsexec_dir=$workdir/cvmfsexec
+    fi
+else
+    # Make the CVMFS distribution ourselves because we don't have a tarball
+    git clone https://github.com/cvmfs/cvmfsexec || fail "Error downloading cvmfsexec from GitHub"
+    cd cvmfsexec
+    # Check out latest tagged version. Only git 2.0+ has "git tag --sort"
+    version_tags=$(git tag --list 'v*' | sort -V)
+    tag=$(tail -n 1 <<<"$version_tags")
+    [[ -n $tag ]] || fail "Couldn't get latest tagged version"
+    git checkout "$tag" || fail "Couldn't switch to $tag"
+    ./makedist osg || fail "Couldn't get osg cvmfs distribution"
+    cvmfsexec_dir=$workdir/cvmfsexec
+fi
 
 # Add local configuration if any
-cvmfs_local_config=$workdir/cvmfsexec/dist/etc/cvmfs/default.local
-if [[ -e $workdir/cvmfsexec/default.local ]]; then
-    cp -f "$workdir/cvmfsexec/default.local"  "$cvmfs_local_config"
+cvmfs_local_config=$cvmfsexec_dir/dist/etc/cvmfs/default.local
+if [[ -e $cvmfsexec_dir/default.local ]]; then
+    cp -f "$cvmfsexec_dir/default.local"  "$cvmfs_local_config"
 fi
 
 if [[ -n $CVMFS_HTTP_PROXY ]]; then
@@ -124,7 +151,7 @@ fi
 export ALLOW_NONCVMFS_IMAGES=true
 
 echo >&2 "*** Running cvmfsexec smoke test:"
-if "$workdir"/cvmfsexec/cvmfsexec -N -- /bin/true; then
+if "$cvmfsexec_dir"/cvmfsexec -N -- /bin/true; then
     echo >&2 "*** cvmfsexec smoke test passed: you have the permissions to run cvmfsexec directly"
 
     # cvmfsexec lets us have CVMFS mounted at `/cvmfs`; set $CVMFS_BASE for
@@ -136,24 +163,24 @@ if "$workdir"/cvmfsexec/cvmfsexec -N -- /bin/true; then
 
     # Note: do not use 'exec'; cleanup won't run
     # $CVMFSEXEC_REPOS is a space-separated list so it's unquoted on purpose.
-    "$workdir"/cvmfsexec/cvmfsexec -N $CVMFSEXEC_REPOS -- "$@"
+    "$cvmfsexec_dir"/cvmfsexec -N $CVMFSEXEC_REPOS -- "$@"
 else
     echo >&2 "*** cvmfsexec smoke test failed: will use mountrepo instead"
     command -v fusermount >& /dev/null || fail "Required command 'fusermount' not found"
 
     if [[ -n $UMOUNTREPO_UNMOUNT_ALL ]]; then
         # Unmount repos from a previous run that couldn't clean up
-        "$workdir"/cvmfsexec/umountrepo -a || :
+        "$cvmfsexec_dir"/umountrepo -a || :
     fi
 
     mounted_repos=
 
     unmount_repos () {
         if [[ -n $UMOUNTREPO_UNMOUNT_ALL ]]; then
-            "$workdir"/cvmfsexec/umountrepo -a || :
+            "$cvmfsexec_dir"/umountrepo -a || :
         else
             for repo in $mounted_repos; do
-                "$workdir"/cvmfsexec/umountrepo "$repo" || :
+                "$cvmfsexec_dir"/umountrepo "$repo" || :
             done
         fi
     }
@@ -163,9 +190,9 @@ else
     # Mount repos
     # $CVMFSEXEC_REPOS is a space-separated list so it's unquoted on purpose.
     for repo in config-osg.opensciencegrid.org $CVMFSEXEC_REPOS; do
-        if ! "$workdir"/cvmfsexec/mountrepo "$repo"; then
+        if ! "$cvmfsexec_dir"/mountrepo "$repo"; then
             echo "$repo mount failed, dumping logs:" >&2
-            tail -n 20 "$workdir"/cvmfsexec/log/"$repo".log >&2
+            tail -n 20 "$cvmfsexec_dir"/log/"$repo".log >&2
             fail "Unable to mount cvmfs repo $repo"
         fi
         mounted_repos="$mounted_repos $repo"
@@ -174,7 +201,7 @@ else
     # mountrepo can't mount CVMFS to `/cvmfs`.  Set $CVMFS_BASE to its
     # location so scripts know where to find it.
 
-    export CVMFS_BASE="$workdir"/cvmfsexec/dist/cvmfs
+    export CVMFS_BASE="$cvmfsexec_dir/dist/cvmfs"
     export GLIDEIN_SINGULARITY_BINDPATH="$CVMFS_BASE:/cvmfs"
     echo "*** cvmfs available at $CVMFS_BASE" >&2
 
