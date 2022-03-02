@@ -176,7 +176,7 @@ fi
 export ALLOW_NONCVMFS_IMAGES=true
 
 msg "Running cvmfsexec smoke test:"
-if "$cvmfsexec_dir"/cvmfsexec -N -- /bin/true; then
+if timeout 45 "$cvmfsexec_dir"/cvmfsexec -N -- /bin/true </dev/null; then
     msg "cvmfsexec smoke test passed: we have the permissions to run cvmfsexec directly"
 
     # cvmfsexec lets us have CVMFS mounted at `/cvmfs`; set $CVMFS_BASE for
