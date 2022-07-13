@@ -91,7 +91,7 @@ done
 
 rm -rf orig-repo.git
 cd ..
-tar --exclude-vcs -czf cvmfsexec.tar.gz cvmfsexec/
+tar --hard-dereference --exclude-vcs -czf cvmfsexec.tar.gz cvmfsexec/
 rm -rf cvmfsexec || :
 
 popd
