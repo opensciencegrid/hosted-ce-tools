@@ -139,8 +139,8 @@ if [[ $CVMFSEXEC_TARBALL = *://* ]]; then
 fi
 
 if [[ -n $CVMFSEXEC_TARBALL ]]; then
-    # We are given a tarball: use it
-    tar xzf "$CVMFSEXEC_TARBALL" || fail "Couldn't extract $CVMFSEXEC_TARBALL"
+    # We are given a tarball: use it.  Turn hardlinks into copies since some filesystems don't support hardlinks
+    tar --hard-dereference -xzf "$CVMFSEXEC_TARBALL" || fail "Couldn't extract $CVMFSEXEC_TARBALL"
     if [[ -d ./cvmfsexec/$distro ]]; then
         cvmfsexec_dir=$workdir/cvmfsexec/$distro
     else
