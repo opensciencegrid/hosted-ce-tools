@@ -166,6 +166,7 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
             # If remote dir is missing then just upload and return
             subprocess.check_call(["rsync", "-e", " ".join(ssh),
                                    "-qaz",
+                                   "--inplace",
                                    local_dir,
                                    "%s:%s" % (remote_host, remote_dir)])
             return
@@ -176,6 +177,7 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
                                "-qaz",
                                "--link-dest", remote_dir,
                                "--delete-before",
+                               "--inplace",
                                local_dir,
                                "%s:%s" % (remote_host, newdir)])
     except (OSError, CalledProcessError) as e:
@@ -184,12 +186,15 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
     # then rename destdir to olddir and newdir to destdir
     try:
         log.info("Moving %s to %s", newdir, remote_dir)
+        olddir_q = shlex_quote(olddir)
+        remote_dir_q = shlex_quote(remote_dir)
+        newdir_q = shlex_quote(newdir)
         subprocess.check_call(ssh +
                               [remote_host,
-             "rm -rf {0} && "
-             "mv {1} {0} && "
-             "mv {2} {1}".format(
-                shlex_quote(olddir), shlex_quote(remote_dir), shlex_quote(newdir))])
+             "rm -rf {olddir_q} && "
+             "mv {remote_dir_q} {olddir_q} && "
+             "mv {newdir_q} {remote_dir_q} && "
+             "rm -rf {olddir_q}".format(**locals())])
     except (OSError, CalledProcessError) as e:
         raise Error("Error renaming remote directories: %s" % e)
 
