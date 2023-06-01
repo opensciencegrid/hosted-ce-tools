@@ -2,7 +2,7 @@
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
 Version: 1.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
@@ -56,6 +56,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Mon Mar 06 2023 Brian Lin <blin@cs.wisc.edu> - 1.0-2
+- Fix missed conversion to python3 (SOFTWARE-5131)
+
 * Thu Feb 09 2023 Carl Edquist <edquist@cs.wisc.edu> - 1.0-1
 - Release hosted-ce-tools 1.0 (SOFTWARE-5130)
 - Convert scripts to python3 (SOFTWARE-5131)
