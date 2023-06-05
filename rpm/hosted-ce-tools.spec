@@ -2,16 +2,11 @@
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
 Version: 1.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
 BuildArch: noarch
-%if 0%{?rhel} >= 8
-Requires: python2-six
-%else
-Requires: python-six
-%endif
 Requires: fetch-crl
 Requires: sudo
 Requires: wget
@@ -56,6 +51,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Fri Jun 02 2023 Matt Westphall <westphall@wisc.edu> - 1.0-3
+- Remove dependency on python-six (SOFTWARE-5131)
+
 * Mon Mar 06 2023 Brian Lin <blin@cs.wisc.edu> - 1.0-2
 - Fix missed conversion to python3 (SOFTWARE-5131)
 
