@@ -2,7 +2,7 @@
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
 Version: 1.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
@@ -10,6 +10,8 @@ BuildArch: noarch
 Requires: fetch-crl
 Requires: sudo
 Requires: wget
+Requires: rsync
+Requires: perl
 Requires: /usr/bin/git
 %systemd_requires
 
@@ -51,6 +53,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Thu Jun 08 2023 Matt Westphall <westphall@wisc.edu> - 1.0-4
+- Add missing dependencies on perl and rsync to spec file (SOFTWARE-5131)
+
 * Fri Jun 02 2023 Matt Westphall <westphall@wisc.edu> - 1.0-3
 - Remove dependency on python-six (SOFTWARE-5131)
 
