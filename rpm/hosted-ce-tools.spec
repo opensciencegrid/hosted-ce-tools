@@ -1,19 +1,14 @@
 %global debug_package %{nil}
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
-Version: 1.0
-Release: 4%{?dist}
+Version: 2.0
+Release: 1%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
 Source0: %{name}-%{version}.tar.gz
 BuildArch: noarch
-Requires: fetch-crl
-Requires: sudo
 Requires: wget
-Requires: rsync
-Requires: perl
 Requires: /usr/bin/git
-%systemd_requires
 
 
 %description
@@ -35,12 +30,6 @@ make install DESTDIR=%{buildroot}
 %files
 %{_bindir}/cvmfsexec-osg-wrapper
 %{_bindir}/make-cvmfsexec-tarball
-%{_bindir}/update-remote-wn-client
-%{_bindir}/update-all-remote-wn-clients
-%config(noreplace) %{_sysconfdir}/endpoints.ini
-%{_unitdir}/update-all-remote-wn-clients.service
-%{_unitdir}/update-all-remote-wn-clients.timer
-%dir /var/log/update-remote-wn-client
 
 
 %post
@@ -53,6 +42,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Tue Aug 15 2023 Brian Lin <blin@cs.wisc.edu> - 2.0-1
+- Drop WN scripts (SOFTWARE-5613)
+
 * Thu Jun 08 2023 Matt Westphall <westphall@wisc.edu> - 1.0-4
 - Add missing dependencies on perl and rsync to spec file (SOFTWARE-5131)
 
