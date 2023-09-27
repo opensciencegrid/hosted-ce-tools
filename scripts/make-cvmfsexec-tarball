@@ -9,7 +9,7 @@
 
 DEFAULT_FILENAME=cvmfsexec-osg.tar.gz
 
-DISTROS=(rhel7-x86_64 rhel8-x86_64)
+DISTROS=(rhel7-x86_64 rhel8-x86_64 rhel9-x86_64)
 
 prog=${0##*/}
 
