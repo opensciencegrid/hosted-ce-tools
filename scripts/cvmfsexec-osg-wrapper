@@ -104,6 +104,8 @@ if [[ $OS_VERSION_ID = 7* ]]; then
     distro=rhel7-x86_64
 elif [[ $OS_VERSION_ID = 8* ]]; then
     distro=rhel8-x86_64
+elif [[ $OS_VERSION_ID = 9* ]]; then
+    distro=rhel9-x86_64
 else
     fail "Unsupported OS version $OS_VERSION_ID"
 fi
