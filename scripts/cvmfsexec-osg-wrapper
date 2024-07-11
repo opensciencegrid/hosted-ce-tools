@@ -98,7 +98,7 @@ PS4='+ ${LINENO}: '
 #set -x
 
 [[ $(uname -p) == "x86_64" ]] || fail "Only the x86_64 architecture is supported"
-grep -q '^ID_LIKE=.*rhel.*' /etc/os-release || fail "Only rhel-like distributions are supported"
+grep -Eq '^ID(_LIKE)?=.*rhel.*' /etc/os-release || fail "Only rhel-like distributions are supported"
 OS_VERSION_ID=$(grep '^VERSION_ID=' /etc/os-release | tr -d '"' | cut -d= -f2-)
 if [[ $OS_VERSION_ID = 7* ]]; then
     distro=rhel7-x86_64
