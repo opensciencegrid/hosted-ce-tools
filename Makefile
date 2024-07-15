@@ -11,7 +11,7 @@ install: install-noconfig
 
 install-noconfig:
 	mkdir -p $(DESTDIR)/usr/bin
-	install -p -m 755 scripts/* $(DESTDIR)/usr/bin/
+	install -p -m 755 scripts/cvmfsexec-osg-wrapper scripts/make-cvmfsexec-tarball $(DESTDIR)/usr/bin/
 
 testsource:
 	mkdir -p upstream
