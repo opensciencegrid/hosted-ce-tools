@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 Summary: Tools for managing OSG Hosted CEs
 Name: hosted-ce-tools
-Version: 2.0
+Version: 2.1
 Release: 1%{?dist}
 License: Apache 2.0
 Url: https://github.com/opensciencegrid/hosted-ce-tools
@@ -42,6 +42,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Mon Jul 15 2024 Matyas Selmeci <matyas@cs.wisc.edu> - 2.1-1
+- Fix rhel-like detection on RHEL (SOFTWARE-5927)
+
 * Tue Aug 15 2023 Brian Lin <blin@cs.wisc.edu> - 2.0-1
 - Drop WN scripts (SOFTWARE-5613)
 

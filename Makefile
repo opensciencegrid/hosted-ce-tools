@@ -1,4 +1,4 @@
-VERSION = 2.0
+VERSION = 2.1
 NAME=hosted-ce-tools
 NAME_VERSION=$(NAME)-$(VERSION)
 HASH = $(shell git rev-parse HEAD)
